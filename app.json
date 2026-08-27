@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "ChallengeSprintMobile",
+    "name": "Clyvo Vet",
     "slug": "ChallengeSprintMobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#6C3BFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -19,6 +19,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Clyvo Vet usa suas fotos para você escolher a imagem do seu pet.",
+          "cameraPermission": "O Clyvo Vet usa a câmera para você fotografar o seu pet."
+        }
+      ]
+    ]
   }
 }
