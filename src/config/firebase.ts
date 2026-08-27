@@ -4,12 +4,12 @@ import { initializeAuth, getAuth, type Auth, type Persistence } from 'firebase/a
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-    apiKey: 'AIzaSyDSsV5xTeMXdniC1N_FhwXVjSMI0nmiSQI',
+    apiKey: 'AIzaSyDaiw2EHxR_v34iFXeXsjOSmVOouR_6g9c',
     authDomain: 'clyvo-vet.firebaseapp.com',
     projectId: 'clyvo-vet',
     storageBucket: 'clyvo-vet.firebasestorage.app',
     messagingSenderId: '881309064335',
-    appId: '1:881309064335:android:7fc661424d79b227baa4fa',
+    appId: '1:881309064335:web:068af435ed52af74baa4fa',
 };
 
 /**
