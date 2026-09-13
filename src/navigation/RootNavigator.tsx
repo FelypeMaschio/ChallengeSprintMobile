@@ -1,23 +1,32 @@
-import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme, type Theme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import AuthStack from './AuthStack';
 import AppStack from './AppStack';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { SplashScreen } from '../screens/SplashScreen';
+
+const TEMPO_MINIMO_SPLASH_MS = 1200;
 
 export default function RootNavigator() {
     const { autenticado, carregandoSessao } = useAuth();
     const { cores, escuro, carregando: carregandoTema } = useTheme();
 
-    // Splash enquanto o Firebase restaura a sessão salva no AsyncStorage.
-    if (carregandoSessao || carregandoTema) {
-        return (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.background }}>
-                <ActivityIndicator size="large" color={cores.primary} />
-            </View>
-        );
+    // Garante que a splash fique visível por um tempo mínimo, mesmo quando o
+    // Firebase restaura a sessão muito rápido (o que faria ela aparecer e
+    // sumir tão rápido que pareceria que nunca existiu).
+    const [tempoMinimoPassou, setTempoMinimoPassou] = useState(false);
+
+    useEffect(() => {
+        const temporizador = setTimeout(() => setTempoMinimoPassou(true), TEMPO_MINIMO_SPLASH_MS);
+        return () => clearTimeout(temporizador);
+    }, []);
+
+    const aindaCarregando = carregandoSessao || carregandoTema || !tempoMinimoPassou;
+
+    if (aindaCarregando) {
+        return <SplashScreen />;
     }
 
     const base = escuro ? DarkTheme : DefaultTheme;
