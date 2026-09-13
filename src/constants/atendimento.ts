@@ -18,6 +18,10 @@ export interface Veterinario {
   id: string;
   nome: string;
   especialidade: string;
+  /** Cada veterinário atende numa única clínica -- assim como no projeto
+   * anterior (mock.ts), evita mostrar um médico disponível numa unidade
+   * onde ele não trabalha. */
+  clinicaId: string;
 }
 
 export const CLINICAS: Clinica[] = [
@@ -27,11 +31,18 @@ export const CLINICAS: Clinica[] = [
 ];
 
 export const VETERINARIOS: Veterinario[] = [
-  { id: 'marina', nome: 'Dra. Marina Alves', especialidade: 'Clínica geral' },
-  { id: 'ricardo', nome: 'Dr. Ricardo Souza', especialidade: 'Cirurgia' },
-  { id: 'camila', nome: 'Dra. Camila Duarte', especialidade: 'Dermatologia' },
-  { id: 'bruno', nome: 'Dr. Bruno Ferreira', especialidade: 'Cardiologia' },
+  { id: 'marina', nome: 'Dra. Marina Alves', especialidade: 'Clínica geral', clinicaId: 'paulista' },
+  { id: 'ricardo', nome: 'Dr. Ricardo Souza', especialidade: 'Cirurgia', clinicaId: 'paulista' },
+  { id: 'camila', nome: 'Dra. Camila Duarte', especialidade: 'Dermatologia', clinicaId: 'pinheiros' },
+  { id: 'bruno', nome: 'Dr. Bruno Ferreira', especialidade: 'Cardiologia', clinicaId: 'pinheiros' },
+  { id: 'juliana', nome: 'Dra. Juliana Ramos', especialidade: 'Oncologia', clinicaId: 'moema' },
+  { id: 'paulo', nome: 'Dr. Paulo Oliveira', especialidade: 'Ortopedia', clinicaId: 'moema' },
 ];
+
+/** Veterinários que atendem numa clínica específica. */
+export function veterinariosDaClinica(clinicaId: string): Veterinario[] {
+  return VETERINARIOS.filter((v) => v.clinicaId === clinicaId);
+}
 
 /** Horários de atendimento: 08:00 às 18:00, a cada 30 minutos. */
 export const HORARIOS_DISPONIVEIS: string[] = (() => {
@@ -67,7 +78,6 @@ export function gerarDisponibilidade(
 
   HORARIOS_DISPONIVEIS.forEach((horario, indice) => {
     const valor = (semente + indice * 17) % 5;
-    // ~40% dos horários saem como ocupados (valor 0 ou 1 de 5 possíveis).
     disponibilidade[horario] = valor !== 0 && valor !== 1;
   });
 

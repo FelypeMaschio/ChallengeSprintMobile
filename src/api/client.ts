@@ -2,26 +2,26 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { ENV } from '../config/env';
 import { auth } from '../config/firebase';
 
-/** Erro já traduzido para o usuário. `status` permite decisões nos módulos de API. */
+/** Erro já traduzido para o usuário. `campos` traz o detalhe por campo que o
+ * backend devolveu (quando existir), em vez de só uma mensagem genérica. */
 export class ErroApi extends Error {
   status?: number;
+  campos?: Record<string, string>;
 
-  constructor(mensagem: string, status?: number) {
+  constructor(mensagem: string, status?: number, campos?: Record<string, string>) {
     super(mensagem);
     this.name = 'ErroApi';
     this.status = status;
+    this.campos = campos;
   }
 }
 
 export const api = axios.create({
   baseURL: ENV.API_URL,
-  timeout: 60000, // Render Free hiberna: a 1ª requisição pode levar até 60s
+  timeout: 60000,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Anexa o token do Firebase em toda requisição. getIdToken() renova sozinho
-// quando o token está perto de expirar — o token dura só 1 hora, então NÃO dá
-// para guardar um valor fixo: precisa buscar auth.currentUser a cada chamada.
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   const usuario = auth.currentUser;
   if (usuario) {
@@ -32,17 +32,19 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
 
 api.interceptors.response.use(
   (resposta) => resposta,
-  (erro: AxiosError) => {
+  (erro: AxiosError<{ mensagem?: string; campos?: Record<string, string> }>) => {
     const status = erro.response?.status;
-    let mensagem = 'Não foi possível conectar ao servidor. Verifique sua internet.';
+    const corpo = erro.response?.data;
+
+    let mensagem = corpo?.mensagem ?? 'Não foi possível conectar ao servidor. Verifique sua internet.';
 
     if (erro.code === 'ECONNABORTED') mensagem = 'O servidor demorou demais para responder.';
-    else if (status === 400) mensagem = 'Os dados enviados são inválidos.';
-    else if (status === 401) mensagem = 'Sua sessão expirou. Faça login novamente.';
-    else if (status === 403) mensagem = 'Você não tem permissão para esta ação.';
-    else if (status === 404) mensagem = 'Registro não encontrado.';
-    else if (status !== undefined && status >= 500) mensagem = 'Erro no servidor. Tente novamente em instantes.';
+    else if (!corpo?.mensagem && status === 400) mensagem = 'Os dados enviados são inválidos.';
+    else if (!corpo?.mensagem && status === 401) mensagem = 'Sua sessão expirou. Faça login novamente.';
+    else if (!corpo?.mensagem && status === 403) mensagem = 'Você não tem permissão para esta ação.';
+    else if (!corpo?.mensagem && status === 404) mensagem = 'Registro não encontrado.';
+    else if (!corpo?.mensagem && status !== undefined && status >= 500) mensagem = 'Erro no servidor. Tente novamente em instantes.';
 
-    return Promise.reject(new ErroApi(mensagem, status));
+    return Promise.reject(new ErroApi(mensagem, status, corpo?.campos));
   },
 );

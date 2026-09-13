@@ -4,9 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Input, CabecalhoTela, SeletorOpcoes, Carregando } from '../../components/ui';
 import { ListaSelecionavel } from '../../components/consultas/ListaSelecionavel';
 import { SeletorHorario } from '../../components/consultas/SeletorHorario';
-import { CLINICAS, VETERINARIOS } from '../../constants/atendimento';
+import { CLINICAS, VETERINARIOS, veterinariosDaClinica } from '../../constants/atendimento';
 import { useCriarConsulta, useAtualizarConsulta } from '../../hooks/useConsultas';
 import { usePets, ErroValidacao } from '../../hooks/usePets';
+import { ErroApi } from '../../api/client';
 import { useTheme } from '../../contexts/ThemeContext';
 import { mascaraData, dataBrParaIso, isoParaDataBr } from '../../utils/date';
 import { emojiDaRaca } from '../../constants/racas';
@@ -68,6 +69,9 @@ export default function ConsultaFormScreen({ navigation, route }: AppScreenProps
   const atualizarConsulta = useAtualizarConsulta();
   const salvando = criarConsulta.isPending || atualizarConsulta.isPending;
 
+  // Só os médicos que atendem na clínica escolhida.
+  const veterinariosDisponiveis = clinicaId ? veterinariosDaClinica(clinicaId) : [];
+
   function alterar<K extends keyof ConsultaFormulario>(campo: K, valor: ConsultaFormulario[K]) {
     setForm((atual) => ({ ...atual, [campo]: valor }));
     if (erros[campo]) setErros((atual) => ({ ...atual, [campo]: undefined }));
@@ -83,8 +87,15 @@ export default function ConsultaFormScreen({ navigation, route }: AppScreenProps
     setClinicaId(id);
     const clinica = CLINICAS.find((c) => c.id === id);
     if (clinica) alterar('clinica', clinica.nome);
-    // A troca de clínica invalida o horário escolhido antes (a disponibilidade
-    // simulada depende da combinação clínica + veterinário + data).
+
+    // Trocar de clínica invalida o médico escolhido antes, se ele não
+    // atender na nova unidade -- e invalida o horário de qualquer forma,
+    // já que a disponibilidade depende dos três juntos.
+    const medicoAindaValido = veterinariosDaClinica(id).some((v) => v.id === veterinarioId);
+    if (!medicoAindaValido) {
+      setVeterinarioId('');
+      alterar('veterinario', '');
+    }
     alterar('horario', '');
   }
 
@@ -101,8 +112,19 @@ export default function ConsultaFormScreen({ navigation, route }: AppScreenProps
   }
 
   function tratarErro(erro: Error) {
-    if (erro instanceof ErroValidacao) setErros(erro.erros);
-    else Alert.alert('Não foi possível salvar', erro.message);
+    if (erro instanceof ErroValidacao) {
+      setErros(erro.erros);
+      return;
+    }
+    // Erro vindo do backend: se ele mandou o detalhe por campo, mostra isso
+    // ao lado do campo certo em vez de um alerta generico -- assim fica
+    // claro qual informacao precisa ser corrigida.
+    if (erro instanceof ErroApi && erro.campos && Object.keys(erro.campos).length > 0) {
+      setErros(erro.campos);
+      Alert.alert('Verifique os campos destacados', erro.message);
+      return;
+    }
+    Alert.alert('Não foi possível salvar', erro.message);
   }
 
   function salvar() {
@@ -171,13 +193,19 @@ export default function ConsultaFormScreen({ navigation, route }: AppScreenProps
           erro={erros.clinica}
         />
 
-        <ListaSelecionavel
-          label="Veterinário"
-          itens={VETERINARIOS.map((v) => ({ id: v.id, titulo: v.nome, subtitulo: v.especialidade }))}
-          valor={veterinarioId}
-          onSelecionar={selecionarVeterinario}
-          erro={erros.veterinario}
-        />
+        {!clinicaId ? (
+          <Text style={[estilos.aviso, { color: cores.textSecondary }]}>
+            Escolha a clínica para ver os veterinários que atendem nela.
+          </Text>
+        ) : (
+          <ListaSelecionavel
+            label="Veterinário"
+            itens={veterinariosDisponiveis.map((v) => ({ id: v.id, titulo: v.nome, subtitulo: v.especialidade }))}
+            valor={veterinarioId}
+            onSelecionar={selecionarVeterinario}
+            erro={erros.veterinario}
+          />
+        )}
 
         <Input
           label="Data"
