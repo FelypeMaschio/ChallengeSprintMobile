@@ -49,7 +49,6 @@ export default function SobreScreen({ navigation }: AppScreenProps<'Sobre'>) {
                     <View style={[estilos.versoes, { borderTopColor: cores.borderLight }]}>
                         <Linha rotulo="Versão" valor={ENV.APP_VERSION} cores={cores} />
                         <Linha rotulo="Entrega" valor={ENV.SPRINT} cores={cores} />
-                        <Linha rotulo="Commit" valor={ENV.COMMIT_HASH} cores={cores} />
                     </View>
                 </Card>
 
