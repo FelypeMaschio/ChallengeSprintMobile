@@ -128,4 +128,4 @@ A API expõe `/api/v1/pets` e `/api/v1/consultas` com os métodos `GET`, `POST`,
 | 563009 | Felype Ferreira Maschio |
 | 563304 | Gustavo Vieira de Matos |
 
-**FIAP — Análise e Desenvolvimento de Sistemas — 2TDS · Challenge 2026 · Sprint 3**
+**FIAP — Análise e Desenvolvimento de Sistemas — 2TDSPI · Challenge 2026 · Sprint 3**
