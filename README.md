@@ -4,7 +4,7 @@ Aplicativo mobile em React Native (Expo + TypeScript) para a jornada contínua d
 
 ## 📽️ Vídeo de apresentação
 
-▶️ **[Assista à demonstração](COLE-AQUI-O-LINK-DO-YOUTUBE)**
+▶️ **[Assista à demonstração](https://youtu.be/l0x_7iouILw)**
 
 > Vídeo com narração, demonstrando o app real em execução (não protótipo/Figma), com no máximo 5 minutos, mostrando navegação, autenticação, integração com a API e uso em dispositivo real.
 
