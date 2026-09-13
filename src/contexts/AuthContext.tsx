@@ -8,7 +8,6 @@ import {
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { traduzirErroFirebase } from '../utils/firebaseErrors';
-import { definirTokenAuth } from '../api/client';
 import { validarLogin, validarCadastro, type DadosLogin, type DadosCadastro } from '../validation/authValidation';
 import type { Erros, Usuario } from '../types';
 
@@ -40,14 +39,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const cancelar = onAuthStateChanged(auth, async (usuarioFirebase) => {
             if (usuarioFirebase) {
                 const token = await usuarioFirebase.getIdToken();
-                definirTokenAuth(token);
                 setUsuario({
                     uid: usuarioFirebase.uid,
                     email: usuarioFirebase.email,
                     nome: usuarioFirebase.displayName ?? 'Tutor',
                 });
             } else {
-                definirTokenAuth(null);
                 setUsuario(null);
             }
             setCarregandoSessao(false);
