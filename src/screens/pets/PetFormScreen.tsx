@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     View, Text, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert, StyleSheet,
 } from 'react-native';
@@ -7,77 +7,34 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Input, CabecalhoTela, SeletorOpcoes } from '../../components/ui';
 import { SeletorRaca } from '../../components/pets/SeletorRaca';
 import { SeletorFotoPet } from '../../components/pets/SeletorFotoPet';
-import { useCriarPet, useAtualizarPet, ErroValidacao } from '../../hooks/usePets';
+import { usePetForm } from '../../hooks/usePetForm';
 import { useTheme } from '../../contexts/ThemeContext';
 import { ESPECIES, emojiDaRaca } from '../../constants/racas';
-import { mascaraData, isoParaDataBr } from '../../utils/date';
+import { mascaraData } from '../../utils/date';
 import { Typography, Spacing, Radius } from '../../theme';
 import type { AppScreenProps } from '../../navigation/types';
-import type { EspecieId, Erros, Opcao, PetFormulario, Sexo } from '../../types';
+import type { EspecieId, Opcao, Sexo } from '../../types';
 
 const SEXOS: Opcao[] = [
     { id: 'Macho', nome: 'Macho', emoji: '♂️' },
     { id: 'Fêmea', nome: 'Fêmea', emoji: '♀️' },
 ];
 
-const FORM_VAZIO: PetFormulario = {
-    nome: '', especie: 'cachorro', raca: '', sexo: '',
-    dataNascimento: '', peso: '', castrado: false, foto: '', observacoes: '',
-};
-
 export default function PetFormScreen({ navigation, route }: AppScreenProps<'PetForm'>) {
     const { cores } = useTheme();
     const insets = useSafeAreaInsets();
 
     const { modo, pet: petExistente } = route.params;
-    const editando = modo === 'editar' && !!petExistente;
 
-    const [form, setForm] = useState<PetFormulario>(
-        editando
-            ? {
-                nome: petExistente.nome,
-                especie: petExistente.especie,
-                raca: petExistente.raca,
-                sexo: petExistente.sexo,
-                dataNascimento: isoParaDataBr(petExistente.dataNascimento),
-                peso: String(petExistente.peso ?? ''),
-                castrado: petExistente.castrado,
-                foto: petExistente.foto,
-                observacoes: petExistente.observacoes,
-            }
-            : FORM_VAZIO,
-    );
-    const [erros, setErros] = useState<Erros>({});
-
-    const criarPet = useCriarPet();
-    const atualizarPet = useAtualizarPet();
-    const salvando = criarPet.isPending || atualizarPet.isPending;
-
-    function alterar<K extends keyof PetFormulario>(campo: K, valor: PetFormulario[K]) {
-        setForm((atual) => ({ ...atual, [campo]: valor }));
-        if (erros[campo]) setErros((atual) => ({ ...atual, [campo]: undefined }));
-    }
-
-    function tratarErro(erro: Error) {
-        // Erro de validação traz o mapa por campo; erro de rede vira alerta.
-        if (erro instanceof ErroValidacao) setErros(erro.erros);
-        else Alert.alert('Não foi possível salvar', erro.message);
-    }
-
-    function salvar() {
-        setErros({});
-
-        const aoDarCerto = () => {
-            Alert.alert('Tudo certo!', editando ? 'Pet atualizado com sucesso.' : 'Pet cadastrado com sucesso.');
+    // Estado, validação e envio vivem no hook. A tela só desenha e decide como avisar o usuário.
+    const { form, erros, editando, salvando, alterar, alterarEspecie, salvar } = usePetForm({
+        petExistente: modo === 'editar' ? petExistente : undefined,
+        aoConcluir: (mensagem) => {
+            Alert.alert('Tudo certo!', mensagem);
             navigation.goBack();
-        };
-
-        if (editando) {
-            atualizarPet.mutate({ id: petExistente.id, dados: form }, { onSuccess: aoDarCerto, onError: tratarErro });
-        } else {
-            criarPet.mutate(form, { onSuccess: aoDarCerto, onError: tratarErro });
-        }
-    }
+        },
+        aoFalhar: (titulo, mensagem) => Alert.alert(titulo, mensagem),
+    });
 
     return (
         <KeyboardAvoidingView
@@ -86,7 +43,7 @@ export default function PetFormScreen({ navigation, route }: AppScreenProps<'Pet
         >
             <CabecalhoTela
                 titulo={editando ? 'Editar pet' : 'Novo pet'}
-                subtitulo={editando ? petExistente.nome : 'Conte um pouco sobre ele'}
+                subtitulo={editando ? petExistente?.nome : 'Conte um pouco sobre ele'}
                 onVoltar={() => navigation.goBack()}
             />
 
@@ -115,9 +72,7 @@ export default function PetFormScreen({ navigation, route }: AppScreenProps<'Pet
                     label="Espécie"
                     opcoes={ESPECIES}
                     valor={form.especie}
-                    onSelecionar={(id) => {
-                        setForm((atual) => ({ ...atual, especie: id, raca: '' }));
-                    }}
+                    onSelecionar={alterarEspecie}
                     erro={erros.especie}
                 />
 
