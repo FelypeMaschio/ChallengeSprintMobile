@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Clyvo Vet",
-    "slug": "challenge-sprint-mobile",
+    "slug": "felypemaschio",
     "version": "4.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -21,7 +21,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "br.com.fiap.clyvovet"
+      "package": "br.com.fiap.clyvovet",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,6 +43,12 @@
           "color": "#6C3BFF"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "368a79ca-f84a-4c3a-9e5f-9972f97fcae1"
+      }
+    },
+    "owner": "felypemaschios-team"
   }
 }
