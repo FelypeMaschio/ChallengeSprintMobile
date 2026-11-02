@@ -4,8 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Card, Badge, Carregando, ErroApi, type VarianteBadge } from '../../components/ui';
-import { usePet, useRemoverPet } from '../../hooks/usePets';
-import { useConsultasDoPet } from '../../hooks/useConsultas';
+import { usePetDetalhe } from '../../hooks/usePetDetalhe';
 import { useTheme } from '../../contexts/ThemeContext';
 import { emojiDaRaca } from '../../constants/racas';
 import { calcularIdade, isoParaDataBr } from '../../utils/date';
@@ -23,9 +22,12 @@ export default function PetDetalheScreen({ navigation, route }: AppScreenProps<'
     const { cores } = useTheme();
     const insets = useSafeAreaInsets();
 
-    const { data: pet, isLoading, isError, error, refetch } = usePet(petId);
-    const { data: consultas = [] } = useConsultasDoPet(petId);
-    const removerPet = useRemoverPet();
+    // Dados e exclusão vivem no hook. A tela só desenha e confirma com o usuário.
+    const { pet, isLoading, isError, error, recarregar: refetch, consultas, excluindo, excluir } = usePetDetalhe({
+        petId,
+        aoExcluir: () => navigation.goBack(),
+        aoFalhar: (mensagem) => Alert.alert('Erro ao excluir', mensagem),
+    });
 
     function confirmarExclusao() {
         if (!pet) return;
@@ -35,15 +37,7 @@ export default function PetDetalheScreen({ navigation, route }: AppScreenProps<'
             `Tem certeza que deseja excluir ${pet.nome}? Esta ação não pode ser desfeita.`,
             [
                 { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Excluir',
-                    style: 'destructive',
-                    onPress: () =>
-                        removerPet.mutate(petId, {
-                            onSuccess: () => navigation.goBack(),
-                            onError: (erro) => Alert.alert('Erro ao excluir', erro.message),
-                        }),
-                },
+                { text: 'Excluir', style: 'destructive', onPress: excluir },
             ],
         );
     }
@@ -179,7 +173,7 @@ export default function PetDetalheScreen({ navigation, route }: AppScreenProps<'
                     titulo="Excluir pet"
                     variante="perigo"
                     onPress={confirmarExclusao}
-                    carregando={removerPet.isPending}
+                    carregando={excluindo}
                     style={{ marginTop: Spacing.md }}
                 />
             </View>
