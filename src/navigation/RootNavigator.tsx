@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SplashScreen } from '../screens/SplashScreen';
 import { useLembretesConsultas, useAbrirConsultaPelaNotificacao } from '../hooks/useNotificacoes';
+import { prepararNotificacoes } from '../services/notificacoes';
 
 const TEMPO_MINIMO_SPLASH_MS = 1200;
 
@@ -25,6 +26,12 @@ export default function RootNavigator() {
     // Firebase restaura a sessão muito rápido (o que faria ela aparecer e
     // sumir tão rápido que pareceria que nunca existiu).
     const [tempoMinimoPassou, setTempoMinimoPassou] = useState(false);
+
+    // A permissão de notificações é pedida já na abertura do app (inclusive na tela de
+    // login), e não só depois de entrar. Idempotente: se já foi concedida, não pergunta de novo.
+    useEffect(() => {
+        void prepararNotificacoes();
+    }, []);
 
     useEffect(() => {
         const temporizador = setTimeout(() => setTempoMinimoPassou(true), TEMPO_MINIMO_SPLASH_MS);

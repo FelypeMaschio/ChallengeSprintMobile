@@ -3,7 +3,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useConsultas } from './useConsultas';
 import {
     consultaIdDaNotificacao,
-    prepararNotificacoes,
     sincronizarLembretes,
 } from '../services/notificacoes';
 import { Notifications } from '../services/notificacoesNativas';
@@ -13,15 +12,11 @@ import { ROTAS } from '../navigation/routes';
 let ultimaNotificacaoTratada: string | null = null;
 
 /**
- * Roda uma vez com o usuário logado: pede a permissão e, sempre que a lista de
+ * Com o usuário logado, sempre que a lista de
  * consultas da API muda, deixa os lembretes do aparelho iguais a ela.
  */
 export function useLembretesConsultas(): void {
     const { data: consultas } = useConsultas();
-
-    useEffect(() => {
-        void prepararNotificacoes();
-    }, []);
 
     useEffect(() => {
         if (consultas) void sincronizarLembretes(consultas);
