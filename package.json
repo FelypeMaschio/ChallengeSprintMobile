@@ -16,6 +16,7 @@
     "expo": "~57.0.17",
     "expo-image-picker": "~57.0.14",
     "expo-linear-gradient": "~57.0.1",
+    "expo-notifications": "~57.0.24",
     "expo-status-bar": "~57.0.1",
     "firebase": "^12.18.0",
     "react": "19.2.3",
@@ -31,7 +32,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "versao": "node scripts/gerar-versao.js"
   },
   "private": true
 }
