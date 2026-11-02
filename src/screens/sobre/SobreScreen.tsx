@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card, CabecalhoTela, Badge } from '../../components/ui';
 import { useTheme } from '../../contexts/ThemeContext';
 import { ENV } from '../../config/env';
+import { COMMIT_HASH } from '../../config/versao';
 import { Typography, Spacing, Radius, type Cores } from '../../theme';
 import type { AppScreenProps } from '../../navigation/types';
 
@@ -18,7 +19,7 @@ const INTEGRANTES = [
 
 const TECNOLOGIAS = [
     'React Native', 'TypeScript', 'Expo', 'React Navigation',
-    'TanStack Query', 'Axios', 'Firebase Auth', 'Context API',
+    'TanStack Query', 'Axios', 'Firebase Auth', 'Context API', 'Notificações locais',
 ];
 
 export default function SobreScreen({ navigation }: AppScreenProps<'Sobre'>) {
@@ -49,6 +50,7 @@ export default function SobreScreen({ navigation }: AppScreenProps<'Sobre'>) {
                     <View style={[estilos.versoes, { borderTopColor: cores.borderLight }]}>
                         <Linha rotulo="Versão" valor={ENV.APP_VERSION} cores={cores} />
                         <Linha rotulo="Entrega" valor={ENV.SPRINT} cores={cores} />
+                        <Linha rotulo="Commit de referência" valor={COMMIT_HASH} cores={cores} selecionavel />
                     </View>
                 </Card>
 
@@ -89,11 +91,13 @@ export default function SobreScreen({ navigation }: AppScreenProps<'Sobre'>) {
     );
 }
 
-function Linha({ rotulo, valor, cores }: { rotulo: string; valor: string; cores: Cores }) {
+function Linha({
+    rotulo, valor, cores, selecionavel = false,
+}: { rotulo: string; valor: string; cores: Cores; selecionavel?: boolean }) {
     return (
         <View style={estilos.linha}>
             <Text style={[estilos.linhaRotulo, { color: cores.textSecondary }]}>{rotulo}</Text>
-            <Text style={[estilos.linhaValor, { color: cores.text }]}>{valor}</Text>
+            <Text selectable={selecionavel} style={[estilos.linhaValor, { color: cores.text }]}>{valor}</Text>
         </View>
     );
 }
