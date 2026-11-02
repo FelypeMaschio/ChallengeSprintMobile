@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import * as firebaseAuth from 'firebase/auth';
 import { initializeAuth, getAuth, type Auth, type Persistence } from 'firebase/auth';
@@ -18,7 +19,7 @@ const firebaseConfig = {
  * sem `any` solto e sem `@ts-ignore`.
  */
 type AuthComPersistenciaRN = {
-    getReactNativePersistence(storage: unknown): Persistence;
+    getReactNativePersistence?: (storage: unknown) => Persistence;
 };
 
 const getReactNativePersistence = (firebaseAuth as unknown as AuthComPersistenciaRN)
@@ -26,16 +27,37 @@ const getReactNativePersistence = (firebaseAuth as unknown as AuthComPersistenci
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-// A persistência em AsyncStorage faz a sessão sobreviver ao fechar e reabrir o app.
-let authInstance: Auth;
-try {
-    authInstance = initializeAuth(app, {
-        persistence: getReactNativePersistence(AsyncStorage),
-    });
-} catch {
-    // Em hot reload o auth já foi inicializado — reaproveita a instância existente.
-    authInstance = getAuth(app);
+/**
+ * Cria o Auth com a sessão persistida no AsyncStorage: é isso que faz o usuário
+ * continuar logado depois de fechar e reabrir o app (o token fica no aparelho).
+ *
+ * Nenhuma falha é engolida em silêncio. Sem persistência explícita o Firebase
+ * guarda a sessão só em memória, e o app pediria login a cada abertura.
+ */
+function criarAuth(): Auth {
+    // Na web (expo start --web) o próprio Firebase usa IndexedDB/localStorage.
+    if (Platform.OS === 'web') return getAuth(app);
+
+    if (!getReactNativePersistence) {
+        throw new Error(
+            'Firebase Auth: getReactNativePersistence não encontrado. ' +
+            'Verifique a versão do pacote "firebase" e se o bundle é o de React Native.',
+        );
+    }
+
+    try {
+        return initializeAuth(app, {
+            persistence: getReactNativePersistence(AsyncStorage),
+        });
+    } catch (erro) {
+        // Único erro aceitável aqui: o Fast Refresh re-executa este módulo e o Auth
+        // já existe (com a persistência configurada na primeira execução).
+        // Qualquer outro erro é relançado, nunca vira uma sessão só em memória.
+        const codigo = (erro as { code?: string }).code;
+        if (codigo === 'auth/already-initialized') return getAuth(app);
+        throw erro;
+    }
 }
 
-export const auth = authInstance;
+export const auth: Auth = criarAuth();
 export default app;
