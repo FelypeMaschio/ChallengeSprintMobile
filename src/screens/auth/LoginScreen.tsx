@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity,
 } from 'react-native';
@@ -6,27 +6,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Input } from '../../components/ui';
-import { useAuth } from '../../contexts/AuthContext';
+import { useLoginForm } from '../../hooks/useLoginForm';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Typography, Spacing, Radius } from '../../theme';
 import { ROTAS } from '../../navigation/routes';
 import type { AuthScreenProps } from '../../navigation/types';
-import type { Erros } from '../../types';
 
 export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
-    const { entrar, processando } = useAuth();
     const { cores } = useTheme();
     const insets = useSafeAreaInsets();
 
-    const [email, setEmail] = useState('');
-    const [senha, setSenha] = useState('');
-    const [erros, setErros] = useState<Erros>({});
-
-    async function aoEntrar() {
-        const resultado = await entrar({ email, senha });
-        setErros(resultado.erros);
-        // Em caso de sucesso não navegamos: o RootNavigator troca de stack sozinho.
-    }
+    // Estado e envio vivem no hook. Em caso de sucesso o RootNavigator troca de stack sozinho.
+    const { email, setEmail, senha, setSenha, erros, processando, enviar: aoEntrar } = useLoginForm();
 
     return (
         <KeyboardAvoidingView
