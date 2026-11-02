@@ -1,17 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import { View, FlatList, TouchableOpacity, RefreshControl, Alert, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CabecalhoTela, Carregando, ErroApi, EstadoVazio, SeletorOpcoes } from '../../components/ui';
 import { ConsultaCard } from '../../components/consultas/ConsultaCard';
-import { useConsultas, useAlterarStatusConsulta, useRemoverConsulta } from '../../hooks/useConsultas';
+import { useConsultasLista, type FiltroConsultas } from '../../hooks/useConsultasLista';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Spacing, Radius } from '../../theme';
 import { ROTAS } from '../../navigation/routes';
 import type { TabScreenProps } from '../../navigation/types';
-import type { Consulta, Opcao, StatusConsulta } from '../../types';
-
-type Filtro = StatusConsulta | 'todas';
+import type { Consulta, Opcao } from '../../types';
 
 const FILTROS: Opcao[] = [
     { id: 'todas', nome: 'Todas' },
@@ -23,33 +21,18 @@ const FILTROS: Opcao[] = [
 export default function ConsultasListScreen({ navigation }: TabScreenProps<'Consultas'>) {
     const { cores } = useTheme();
     const insets = useSafeAreaInsets();
-    const [filtro, setFiltro] = useState<Filtro>('todas');
 
-    const { data: consultas = [], isLoading, isError, error, refetch, isRefetching } = useConsultas();
-    const alterarStatus = useAlterarStatusConsulta();
-    const removerConsulta = useRemoverConsulta();
+    // Filtro, conclusão e exclusão vivem no hook. A tela só desenha e confirma com o usuário.
+    const {
+        consultas, visiveis, filtro, setFiltro,
+        isLoading, isError, error, isRefetching, recarregar: refetch,
+        concluir, excluir,
+    } = useConsultasLista({ aoFalhar: (mensagem) => Alert.alert('Erro', mensagem) });
 
-    const visiveis = useMemo(
-        () => (filtro === 'todas' ? consultas : consultas.filter((c) => c.status === filtro)),
-        [consultas, filtro],
-    );
-
-    function concluir(consulta: Consulta) {
-        alterarStatus.mutate(
-            { consulta, novoStatus: 'concluida' },
-            { onError: (erro) => Alert.alert('Erro', erro.message) },
-        );
-    }
-
-    function excluir(consulta: Consulta) {
+    function confirmarExclusao(consulta: Consulta) {
         Alert.alert('Excluir consulta', `Excluir a consulta "${consulta.motivo}"?`, [
             { text: 'Cancelar', style: 'cancel' },
-            {
-                text: 'Excluir',
-                style: 'destructive',
-                onPress: () =>
-                    removerConsulta.mutate(consulta.id, { onError: (erro) => Alert.alert('Erro', erro.message) }),
-            },
+            { text: 'Excluir', style: 'destructive', onPress: () => excluir(consulta) },
         ]);
     }
 
@@ -89,7 +72,7 @@ export default function ConsultasListScreen({ navigation }: TabScreenProps<'Cons
             />
 
             <View style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.md }}>
-                <SeletorOpcoes<Filtro> opcoes={FILTROS} valor={filtro} onSelecionar={setFiltro} />
+                <SeletorOpcoes<FiltroConsultas> opcoes={FILTROS} valor={filtro} onSelecionar={setFiltro} />
             </View>
 
             <FlatList
@@ -110,7 +93,7 @@ export default function ConsultasListScreen({ navigation }: TabScreenProps<'Cons
                         consulta={item}
                         onConcluir={() => concluir(item)}
                         onEditar={() => navigation.navigate(ROTAS.CONSULTA_FORM, { modo: 'editar', consulta: item })}
-                        onExcluir={() => excluir(item)}
+                        onExcluir={() => confirmarExclusao(item)}
                     />
                 )}
             />
