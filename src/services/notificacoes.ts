@@ -1,4 +1,4 @@
-import * as Notifications from 'expo-notifications';
+import { Notifications } from './notificacoesNativas';
 import { Platform } from 'react-native';
 import { isoParaDataBr } from '../utils/date';
 import type { Consulta } from '../types';
@@ -23,7 +23,7 @@ export interface DadosNotificacaoConsulta {
 }
 
 // Com o app aberto, a notificação também aparece (banner + lista).
-Notifications.setNotificationHandler({
+Notifications?.setNotificationHandler({
     handleNotification: async () => ({
         shouldShowBanner: true,
         shouldShowList: true,
@@ -45,6 +45,7 @@ function dataHoraDaConsulta(consulta: Consulta): Date | null {
 
 /** Cria o canal (Android) e pede a permissão. Devolve se pode notificar. */
 export async function prepararNotificacoes(): Promise<boolean> {
+    if (!Notifications) return false;
     try {
         if (Platform.OS === 'android') {
             await Notifications.setNotificationChannelAsync(CANAL_CONSULTAS, {
@@ -62,6 +63,7 @@ export async function prepararNotificacoes(): Promise<boolean> {
 }
 
 export async function cancelarLembrete(consultaId: string): Promise<void> {
+    if (!Notifications) return;
     try {
         await Notifications.cancelScheduledNotificationAsync(idLembrete(consultaId));
     } catch {
@@ -70,6 +72,7 @@ export async function cancelarLembrete(consultaId: string): Promise<void> {
 }
 
 export async function cancelarTodosLembretes(): Promise<void> {
+    if (!Notifications) return;
     try {
         await Notifications.cancelAllScheduledNotificationsAsync();
     } catch {
@@ -83,6 +86,7 @@ export async function cancelarTodosLembretes(): Promise<void> {
  * Consulta que não está "agendada" ou que já passou não tem lembrete.
  */
 export async function agendarLembrete(consulta: Consulta): Promise<void> {
+    if (!Notifications) return;
     await cancelarLembrete(consulta.id);
     if (consulta.status !== 'agendada') return;
 
@@ -114,6 +118,7 @@ export async function agendarLembrete(consulta: Consulta): Promise<void> {
 
 /** Evento real: o tutor acabou de agendar. Confirma na hora e agenda o lembrete. */
 export async function notificarConsultaAgendada(consulta: Consulta): Promise<void> {
+    if (!Notifications) return;
     if (consulta.status === 'agendada') {
         const dados: DadosNotificacaoConsulta = { consultaId: consulta.id };
         try {

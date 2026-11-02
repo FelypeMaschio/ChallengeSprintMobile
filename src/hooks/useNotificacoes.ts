@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import * as Notifications from 'expo-notifications';
 import { useNavigation } from '@react-navigation/native';
 import { useConsultas } from './useConsultas';
 import {
@@ -7,6 +6,7 @@ import {
     prepararNotificacoes,
     sincronizarLembretes,
 } from '../services/notificacoes';
+import { Notifications } from '../services/notificacoesNativas';
 import { ROTAS } from '../navigation/routes';
 
 /** Fora do componente de propósito: sobrevive a logout/login e evita reabrir a mesma notificação. */
@@ -28,6 +28,11 @@ export function useLembretesConsultas(): void {
     }, [consultas]);
 }
 
+/** Sem o módulo nativo (Expo Go) não há resposta; a escolha é fixa por execução, então a ordem dos hooks não muda. */
+const useUltimaRespostaNotificacao = Notifications
+    ? Notifications.useLastNotificationResponse
+    : () => null;
+
 /**
  * Quando o usuário toca numa notificação (app aberto, em segundo plano ou fechado),
  * abre a consulta correspondente. Se ela não estiver mais na lista (foi excluída),
@@ -35,12 +40,12 @@ export function useLembretesConsultas(): void {
  */
 export function useAbrirConsultaPelaNotificacao(): void {
     const navigation = useNavigation();
-    const resposta = Notifications.useLastNotificationResponse();
+    const resposta = useUltimaRespostaNotificacao();
     const { data: consultas, isLoading } = useConsultas();
 
     useEffect(() => {
         if (!resposta || isLoading) return;
-        if (resposta.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
+        if (resposta.actionIdentifier !== Notifications?.DEFAULT_ACTION_IDENTIFIER) return;
 
         const idDaNotificacao = resposta.notification.request.identifier;
         if (ultimaNotificacaoTratada === idDaNotificacao) return;
