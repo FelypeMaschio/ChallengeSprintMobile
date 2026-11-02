@@ -1,33 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Input, CabecalhoTela } from '../../components/ui';
-import { useAuth } from '../../contexts/AuthContext';
+import { useCadastroForm } from '../../hooks/useCadastroForm';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Typography, Spacing, Radius } from '../../theme';
 import type { AuthScreenProps } from '../../navigation/types';
-import type { DadosCadastro } from '../../validation/authValidation';
-import type { Erros } from '../../types';
-
-const FORM_VAZIO: DadosCadastro = { nome: '', email: '', senha: '', confirmarSenha: '' };
 
 export default function CadastroScreen({ navigation }: AuthScreenProps<'Cadastro'>) {
-    const { cadastrar, processando } = useAuth();
     const { cores } = useTheme();
 
-    const [form, setForm] = useState<DadosCadastro>(FORM_VAZIO);
-    const [erros, setErros] = useState<Erros>({});
-
-    function alterar(campo: keyof DadosCadastro, valor: string) {
-        setForm((atual) => ({ ...atual, [campo]: valor }));
-    }
-
-    async function aoCadastrar() {
-        const resultado = await cadastrar(form);
-        setErros(resultado.erros);
-    }
+    // Estado e envio vivem no hook. Em caso de sucesso o RootNavigator troca de stack sozinho.
+    const { form, erros, processando, alterar, enviar: aoCadastrar } = useCadastroForm();
 
     return (
         <KeyboardAvoidingView
