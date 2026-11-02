@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { validarConsulta } from '../validation/consultaValidation';
 import { dataBrParaIso, ehFuturoOuHoje } from '../utils/date';
 import { ErroValidacao } from './usePets';
+import { agendarLembrete, cancelarLembrete, notificarConsultaAgendada } from '../services/notificacoes';
 import type { Consulta, ConsultaFormulario } from '../types';
 
 export const chavesConsultas = {
@@ -68,7 +69,11 @@ export function useCriarConsulta() {
             if (Object.keys(erros).length > 0) throw new ErroValidacao(erros);
             return consultasApi.criar(prepararPayload(dados, usuario?.uid ?? ''));
         },
-        onSuccess: () => clienteQuery.invalidateQueries({ queryKey: chavesConsultas.raiz }),
+        onSuccess: (consulta) => {
+            // Evento real: o tutor acabou de agendar -> confirmação + lembrete.
+            void notificarConsultaAgendada(consulta);
+            return clienteQuery.invalidateQueries({ queryKey: chavesConsultas.raiz });
+        },
     });
 }
 
@@ -82,7 +87,11 @@ export function useAtualizarConsulta() {
             if (Object.keys(erros).length > 0) throw new ErroValidacao(erros);
             return consultasApi.atualizar(id, prepararPayload(dados, usuario?.uid ?? ''));
         },
-        onSuccess: () => clienteQuery.invalidateQueries({ queryKey: chavesConsultas.raiz }),
+        onSuccess: (consulta) => {
+            // Remarca o lembrete (ou cancela, se a consulta deixou de estar "agendada").
+            void agendarLembrete(consulta);
+            return clienteQuery.invalidateQueries({ queryKey: chavesConsultas.raiz });
+        },
     });
 }
 
@@ -95,7 +104,10 @@ export function useAlterarStatusConsulta() {
             const { id, ...resto } = consulta;
             return consultasApi.atualizar(id, { ...resto, status: novoStatus });
         },
-        onSuccess: () => clienteQuery.invalidateQueries({ queryKey: chavesConsultas.raiz }),
+        onSuccess: (consulta) => {
+            void agendarLembrete(consulta);
+            return clienteQuery.invalidateQueries({ queryKey: chavesConsultas.raiz });
+        },
     });
 }
 
@@ -104,7 +116,10 @@ export function useRemoverConsulta() {
 
     return useMutation<string, Error, string>({
         mutationFn: (id) => consultasApi.remover(id),
-        onSuccess: () => clienteQuery.invalidateQueries({ queryKey: chavesConsultas.raiz }),
+        onSuccess: (id) => {
+            void cancelarLembrete(id);
+            return clienteQuery.invalidateQueries({ queryKey: chavesConsultas.raiz });
+        },
     });
 }
 
