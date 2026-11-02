@@ -1,10 +1,10 @@
-# 🐾 Clyvo Vet Mobile — Sprint 3
+# 🐾 Clyvo Vet Mobile — Sprint 4
 
 Aplicativo mobile em React Native (Expo + TypeScript) para a jornada contínua de cuidado do pet — Challenge FIAP 2026.
 
 ## 📽️ Vídeo de apresentação
 
-▶️ **[Assista à demonstração](https://youtu.be/l0x_7iouILw)**
+▶️ **[Assista à demonstração da Sprint 4](COLE_AQUI_O_LINK_DO_VIDEO)**
 
 > Vídeo com narração, demonstrando o app real em execução (não protótipo/Figma), com no máximo 5 minutos, mostrando navegação, autenticação, integração com a API e uso em dispositivo real.
 
@@ -20,6 +20,7 @@ O Clyvo Vet centraliza o cuidado do pet e avisa antes que o cuidado atrase:
 - Agendamento e acompanhamento de consultas veterinárias, com controle de status
 - Alertas de acompanhamento: consultas vencidas, retornos próximos, pets sem check-up recente
 - Autenticação real via Firebase, com sessão persistente entre aberturas do app
+- Notificações locais: confirmação ao agendar e lembrete 30 minutos antes da consulta
 - Tema claro e escuro
 
 ## 🛠️ Tecnologias
@@ -34,6 +35,8 @@ O Clyvo Vet centraliza o cuidado do pet e avisa antes que o cuidado atrase:
 | Estado global do cliente | Context API | Sessão do usuário e tema |
 | Autenticação | Firebase Authentication | Login e cadastro reais |
 | Persistência local | AsyncStorage | Sessão e preferência de tema |
+| Notificações | expo-notifications (locais) | Confirmação e lembrete de consulta |
+| Build e distribuição | EAS Build + Firebase App Distribution | APK de teste entregue ao professor |
 | Backend | Java + Spring Boot | API REST consumida pelo app (repositório: `api-mobile`) |
 
 ## 🏗️ Arquitetura
@@ -45,9 +48,10 @@ src/
 ├── config/        Ambiente (env.ts) e inicialização do Firebase
 ├── constants/     Catálogo de raças
 ├── contexts/      Context API — AuthContext e ThemeContext
-├── hooks/         Regra de negócio — um hook por domínio (usePets, useConsultas, useAlertas)
+├── hooks/         Regra de negócio e estado de formulário — um hook por domínio/tela (usePets, useConsultas, usePetForm, useConsultaForm, useNotificacoes...)
 ├── navigation/    Rotas, stacks e tabs, com tipagem própria
-├── screens/       Somente interface — nenhuma chamada HTTP, nenhuma validação
+├── screens/       Somente interface — sem chamada HTTP, validação, useState de formulário ou mutations
+├── services/      Serviços do dispositivo — notificações locais
 ├── theme/         Design tokens (cores, tipografia, espaçamento)
 ├── types/         Tipos do domínio compartilhados por todas as camadas
 ├── utils/         Funções puras (datas, máscaras)
@@ -60,7 +64,7 @@ Fluxo de dados, sempre em uma única direção:
 Tela → Hook (valida + TanStack Query) → Módulo de API (axios) → Backend Java
 ```
 
-Nenhuma tela importa axios. Nenhuma tela contém lógica de validação. Cada domínio (Pet, Consulta) tem seu próprio hook — evitando o acoplamento de um hook único cuidando de todas as entidades.
+Nenhuma tela importa axios, valida dados ou chama `.mutate`: o estado dos formulários e as mutations ficam nos hooks (Sprint 4). Cada domínio (Pet, Consulta) tem seu próprio hook — evitando o acoplamento de um hook único cuidando de todas as entidades.
 
 ## 📱 Telas (10 no total — mínimo exigido: 6)
 
@@ -75,7 +79,7 @@ Nenhuma tela importa axios. Nenhuma tela contém lógica de validação. Cada do
 | 7 | Consultas | Listagem com filtros por status |
 | 8 | Nova/Editar Consulta | Formulário (CREATE / UPDATE) |
 | 9 | Perfil | Dados do tutor, alternância de tema e logout |
-| 10 | Sobre o app | Versão, equipe e tecnologias |
+| 10 | Sobre o app | Versão, equipe, tecnologias e **commit de referência** do build |
 
 ## 🔄 CRUD completo (duas funcionalidades dependentes da API)
 
@@ -89,9 +93,33 @@ Todas as operações passam pela API HTTP via TanStack Query (`useQuery`/`useMut
 ## 🔐 Autenticação
 
 - Login e cadastro via **Firebase Authentication** (e-mail/senha), serviço externo real
-- Sessão persistida via AsyncStorage: o usuário não precisa autenticar novamente ao reabrir o app
+- Sessão persistida via AsyncStorage (`initializeAuth` + `getReactNativePersistence`): o usuário não precisa autenticar novamente ao reabrir o app
 - Rotas protegidas: o stack de telas internas só é montado quando há usuário autenticado — sem sessão, essas rotas nem existem no navegador
 - Logout funcional: ao sair, o acesso às telas protegidas é bloqueado imediatamente
+
+## 🔔 Notificações (Sprint 4)
+
+Notificações **locais** (permitidas pelo enunciado), geradas por eventos reais do app (`src/services/notificacoes.ts`):
+
+| Evento | Notificação |
+|---|---|
+| Tutor agenda uma consulta | Confirmação imediata ("Consulta agendada") |
+| Consulta futura com status "agendada" | Lembrete 30 minutos antes do horário |
+| Consulta editada, concluída ou excluída | Lembrete reagendado ou cancelado |
+| Logout | Lembretes pendentes cancelados |
+
+Ao tocar na notificação, o app abre a consulta correspondente. Os lembretes são sincronizados com a lista de consultas vinda da API. As notificações exigem o APK (build nativo); no Expo Go o app abre normalmente, mas sem notificações.
+
+## 📦 Build e distribuição
+
+```bash
+npm install -g eas-cli
+eas login
+npm run versao                                   # grava o hash do commit em src/config/versao.ts
+eas build -p android --profile preview           # gera o APK
+```
+
+O APK é distribuído pelo **Firebase App Distribution** (app Android `br.com.fiap.clyvovet`, projeto `clyvo-vet`), com o e-mail institucional do professor como testador. A tela **Sobre o app** exibe o hash do commit que originou o build, para conferência com este repositório.
 
 ## 🚀 Como executar
 
@@ -128,4 +156,4 @@ A API expõe `/api/v1/pets` e `/api/v1/consultas` com os métodos `GET`, `POST`,
 | 563009 | Felype Ferreira Maschio |
 | 563304 | Gustavo Vieira de Matos |
 
-**FIAP — Análise e Desenvolvimento de Sistemas — 2TDSPI · Challenge 2026 · Sprint 3**
+**FIAP — Análise e Desenvolvimento de Sistemas — 2TDSPI · Challenge 2026 · Sprint 4**
