@@ -6,8 +6,16 @@ import AppStack from './AppStack';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SplashScreen } from '../screens/SplashScreen';
+import { useLembretesConsultas, useAbrirConsultaPelaNotificacao } from '../hooks/useNotificacoes';
 
 const TEMPO_MINIMO_SPLASH_MS = 1200;
+
+/** Só existe com usuário logado e dentro do NavigationContainer (precisa de navegação). */
+function AppAutenticado() {
+    useLembretesConsultas();
+    useAbrirConsultaPelaNotificacao();
+    return <AppStack />;
+}
 
 export default function RootNavigator() {
     const { autenticado, carregandoSessao } = useAuth();
@@ -46,7 +54,7 @@ export default function RootNavigator() {
     return (
         <NavigationContainer theme={temaNavegacao}>
             <StatusBar style={escuro ? 'light' : 'dark'} />
-            {autenticado ? <AppStack /> : <AuthStack />}
+            {autenticado ? <AppAutenticado /> : <AuthStack />}
         </NavigationContainer>
     );
 }
