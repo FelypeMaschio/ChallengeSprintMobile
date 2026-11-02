@@ -8,6 +8,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { traduzirErroFirebase } from '../utils/firebaseErrors';
+import { cancelarTodosLembretes } from '../services/notificacoes';
 import { validarLogin, validarCadastro, type DadosLogin, type DadosCadastro } from '../validation/authValidation';
 import type { Erros, Usuario } from '../types';
 
@@ -34,11 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [carregandoSessao, setCarregandoSessao] = useState(true);
     const [processando, setProcessando] = useState(false);
 
-    // Observa a sessão do Firebase: dispara no boot do app e a cada login/logout.
+    // Observa a sessão do Firebase: dispara no boot do app (já com a sessão lida do
+    // AsyncStorage) e a cada login/logout. O callback é síncrono de propósito: o token
+    // NÃO é buscado aqui. O interceptor do axios pede um token novo a cada requisição.
+    // Buscar o token neste ponto, com rede lenta ou offline, travava a splash e
+    // parecia que a sessão não tinha sido restaurada.
     useEffect(() => {
-        const cancelar = onAuthStateChanged(auth, async (usuarioFirebase) => {
+        const cancelar = onAuthStateChanged(auth, (usuarioFirebase) => {
             if (usuarioFirebase) {
-                const token = await usuarioFirebase.getIdToken();
                 setUsuario({
                     uid: usuarioFirebase.uid,
                     email: usuarioFirebase.email,
@@ -89,6 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         async function sair(): Promise<ResultadoAuth> {
             setProcessando(true);
             try {
+                // Lembretes agendados são do usuário que está saindo.
+                await cancelarTodosLembretes();
                 await signOut(auth);
                 return { ok: true, erros: {} };
             } catch (erro) {
