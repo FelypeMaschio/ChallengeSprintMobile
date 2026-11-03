@@ -6,6 +6,14 @@ Aplicativo mobile em React Native (Expo + TypeScript) para a jornada contínua d
 
 ▶️ **[Assista à demonstração da Sprint 4](COLE_AQUI_O_LINK_DO_VIDEO)**
 
+## 📲 Aplicativo publicado (Firebase App Distribution)
+
+📦 **[Instalar o app (versão 4.0.0)](https://appdistribution.firebase.google.com/testerapps/1:881309064335:android:bcf3b7efadd93781baa4fa/releases/2pn1fbbmmg04o?utm_source=firebase-console)**
+
+- Projeto Firebase: `clyvo-vet` · App Android: `br.com.fiap.clyvovet`
+- Tester cadastrado: e-mail institucional do professor (`antonio.neto@fiap.com.br`)
+- Para conferir a versão instalada, abra **Sobre o app**: o commit de referência exibido corresponde a este repositório.
+
 > Vídeo com narração, demonstrando o app real em execução (não protótipo/Figma), com no máximo 5 minutos, mostrando navegação, autenticação, integração com a API e uso em dispositivo real.
 
 ## 🎯 O problema
