@@ -4,7 +4,9 @@ Aplicativo mobile em React Native (Expo + TypeScript) para a jornada contínua d
 
 ## 📽️ Vídeo de apresentação
 
-▶️ **[Assista à demonstração da Sprint 4](COLE_AQUI_O_LINK_DO_VIDEO)**
+▶️ **[Assista à demonstração da Sprint 4](https://youtu.be/_nO9_ch6Tgg)**
+
+> Vídeo com narração, demonstrando o app real em execução (não protótipo/Figma): cadastro e login, CRUD de pets e consultas integrado à API, notificação de consulta, persistência da sessão, tema claro/escuro e a tela Sobre o app com o commit de referência.
 
 ## 📲 Aplicativo publicado (Firebase App Distribution)
 
@@ -13,8 +15,6 @@ Aplicativo mobile em React Native (Expo + TypeScript) para a jornada contínua d
 - Projeto Firebase: `clyvo-vet` · App Android: `br.com.fiap.clyvovet`
 - Tester cadastrado: e-mail institucional do professor (`antonio.neto@fiap.com.br`)
 - Para conferir a versão instalada, abra **Sobre o app**: o commit de referência exibido corresponde a este repositório.
-
-> Vídeo com narração, demonstrando o app real em execução (não protótipo/Figma), com no máximo 5 minutos, mostrando navegação, autenticação, integração com a API e uso em dispositivo real.
 
 ## 🎯 O problema
 
